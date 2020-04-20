@@ -1,0 +1,23 @@
+{
+  "name": "converthelper",
+  "version": "0.0.1",
+  "description": "转换工具.",
+  "author": "eureka2020@foxmail.com",
+  "main": "main.js",
+  "main-menu": {
+    "i18n:MAIN_MENU.package.title/ConvertHelper": {
+      "message": "converthelper:open"
+    }
+  },
+  "panel": {
+    "main": "panel/index.js",
+    "type": "dockable",
+    "title": "Convert Helper",
+    "width": 400,
+    "height": 300
+  },
+  "dependencies": {
+    "fs-extra": "^8.0.1",
+    "find": "^0.3.0"
+  }
+}

@@ -1,0 +1,47 @@
+<div class="flex-1 mainDiv " id="mainDiv">
+    <section class="">
+        <ui-box-container class="container">
+            <h3>将mp3、wav转成单声道mp3格式</h3>
+            <ui-prop name="Audio目录" tooltip="包含mp3、wav文件的资源路径，会自动搜索该目录下的所有audio文件">
+                <div class="layout horizontal content flex-1">
+                    <ui-input class="flex-2" v-value="audioInfo.workDir"></ui-input>
+                    <ui-button @click="audioSelectDir" tooltip="包含mp3、wav文件的资源路径，会自动搜索该目录下的所有audio文件">目录</ui-button>
+                </div>
+            </ui-prop>
+            <ui-prop name="">
+                <ui-button @click="mp3CompressHandler" v-bind:disabled="!audioInfo.workDir">压缩</ui-button>
+            </ui-prop>
+        </ui-box-container>
+        <br>
+        <ui-box-container class="container">
+            <h3>JPG/PNG转成webp格式</h3>
+            <ui-prop name="资源目录" tooltip="包含jpg/png文件的资源路径，会自动搜索该目录下的所有图片文件">
+                <div class="layout horizontal content flex-1">
+                    <ui-input class="flex-2" v-value="imgInfo.workDir"></ui-input>
+                    <ui-button @click="imgSelectDir" tooltip="包含jpg/png文件的资源路径，会自动搜索该目录下的所有图片文件">目录</ui-button>
+                </div>
+            </ui-prop>
+            <ui-prop name="JPG品质">
+                <ui-slider v-value="imgInfo.jpgQuality" max="100" min="0" step="1"></ui-slider>
+            </ui-prop>
+            <ui-prop name="PNG品质">
+                <ui-slider v-value="imgInfo.pngQuality" max="100" min="0" step="1"></ui-slider>
+            </ui-prop>
+            <ui-prop name="是否覆盖文件">
+                <ui-checkbox v-value="imgInfo.override">覆盖原文件</ui-checkbox>
+            </ui-prop>
+            <ui-prop name="比较文件尺寸" tooltip="勾选后，如果转成webp比原始文件还要大，则本文件跳过不做处理">
+                <ui-checkbox v-value="imgInfo.checkConvertSize">是否比较文件尺寸
+                </ui-checkbox>
+            </ui-prop>
+
+            <ui-prop name="文件处理阈值" tooltip="图片大小高于此值的才做转换(KB)">
+                <ui-num-input min="1" v-value="imgInfo.minFileLimt"></ui-num-input>
+            </ui-prop>
+            <ui-prop name="">
+                <ui-button @click="imgCompressHandler"" v-bind:disabled=" !imgInfo.workDir">转换</ui-button>
+            </ui-prop>
+        </ui-box-container>
+
+    </section>
+</div>
