@@ -181,21 +181,86 @@ let imgHandler = async function (imgInfo) {
 }
 
 
+let spriteEditHandler = function (webcontent) {
+
+    let jscode = `
+    // if (!document.querySelector("#btn_crop")) {
+        let btn_crop = document.createElement("ui-button");
+        btn_crop.id = "btn_crop";
+        btn_crop.innerText = "Cropping Image";
+        btn_crop.style.cssText = "position:fixed;bottom:20px;left:20px";
+        btn_crop.onclick = function () {
+            // 遍历当前的所有ui-num-input
+            let elements = document.querySelector('ui-panel-frame').shadowRoot.querySelectorAll('ui-num-input');
+            let crops = [];
+            for (let inputElement of elements) {
+                let attrs = inputElement.attributes;
+                let object = {};
+                for (let aaa of attrs) {
+                    if (aaa.name == "id") {
+                        object.id = aaa.value;
+                    }
+                    if (aaa.name == "value") {
+                        object.value = aaa.value;
+                    }
+                }
+                crops.push(object);
+            }
+            Editor.Ipc.sendToMain('converthelper:cropImage', {
+                url: location.href,
+                crops: crops
+            });
+        }
+        document.body.appendChild(btn_crop);
+    // }
+`
+    webcontent.executeJavaScript(jscode, true).then((result) => {
+        trace(result) // Will be the JSON object from the fetch call
+    })
+    // webcontent.on('did-finish-load', async function () {
+    //     let ret = await contents.executeJavaScript(jscode, true);
+    //     trace("executeJavaScript" + ret);
+    //     // const key = await contents.insertCSS('html, body { background-color: #f00; }')
+    //     // contents.removeInsertedCSS(key)
+    // })
+}
+
 module.exports = {
     load() {
-        // execute when package loaded
+        // execute when package 
+        if (!Editor.Panel.$open) {
+            Editor.Panel.$open = Editor.Panel.open;
+            Editor.Panel.open = function (...args) {
+                Editor.Panel.$open(...args);
+                setTimeout(() => {
+                    const { webContents } = require('electron')
+                    for (let webcontent of webContents.getAllWebContents()) {
+                        // Editor.log("*******" + webcontent.id + webcontent.getTitle(), webcontent.getURL());
+                        if (webcontent.getURL().indexOf("sprite-editor") > 0) {
+                            spriteEditHandler(webcontent);
+                        }
+                    }
+                }, 300)
+            }
+        }
     },
 
     unload() {
+        if (Editor.Panel.$open) {
+            Editor.Panel.open = Editor.Panel.$open
+            Editor.Panel.$open = null;
+        }
         // execute when package unloaded
     },
 
     // register your ipc messages here
     messages: {
+
         'converthelper:open'() {
             // open entry panel registered in package.json
             Editor.Panel.open('converthelper');
         },
+
         'converthelper:audioHandler'(event, params) {
             if (isAudioLock) {
                 trace('[ConvertHelper] Audio convert is processing!');
@@ -230,6 +295,14 @@ module.exports = {
             } catch (e) {
                 trace(e);
             }
+        },
+        'converthelper:cropImage'(event, params) {
+            // open entry panel registered in package.json
+            let fileInfo = JSON.parse(decodeURIComponent(params.url).split("#")[1]);
+            trace("fileInfo", fileInfo)
+            trace("_pathToUuid", cc.loader._assetTables["assets"]._pathToUuid)
+
+            trace("queryPathByUuid=", Editor.assetdb.queryPathByUuid('bd168dd0-272d-40a3-b87b-1797a0766656'));
         },
     },
 };

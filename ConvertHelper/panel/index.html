@@ -34,7 +34,6 @@
                 <ui-checkbox v-value="imgInfo.checkConvertSize">是否比较文件尺寸
                 </ui-checkbox>
             </ui-prop>
-
             <ui-prop name="文件处理阈值" tooltip="图片大小高于此值的才做转换(KB)">
                 <ui-num-input min="1" v-value="imgInfo.minFileLimt"></ui-num-input>
             </ui-prop>
@@ -42,6 +41,5 @@
                 <ui-button @click="imgCompressHandler"" v-bind:disabled=" !imgInfo.workDir">转换</ui-button>
             </ui-prop>
         </ui-box-container>
-
     </section>
 </div>

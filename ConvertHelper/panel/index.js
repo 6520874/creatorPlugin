@@ -67,7 +67,6 @@ const createVUE = function (element) {
           return;
         this.imgInfo.workDir = result[0];
         this._saveConfig();
-
       },
 
       mp3CompressHandler: function () {
@@ -75,7 +74,6 @@ const createVUE = function (element) {
           return;
         }
         Editor.Ipc.sendToMain('converthelper:audioHandler', JSON.stringify(this.audioInfo));
-
       },
       imgCompressHandler: function () {
         if (!this.imgInfo.workDir) {
@@ -84,7 +82,6 @@ const createVUE = function (element) {
         this._saveConfig();
         Editor.Ipc.sendToMain('converthelper:imgHandler', JSON.stringify(this.imgInfo));
       }
-
     }
   });
 };
