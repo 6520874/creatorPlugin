@@ -1,0 +1,22 @@
+{
+  "name": "easysubpackage",
+  "version": "0.0.2",
+  "description": "轻松把构建完成的资源分包.",
+  "author": "eureka2020@foxmail.com",
+  "main": "main.js",
+  "main-menu": {
+    "i18n:MAIN_MENU.package.title/easySubpackage": {
+      "message": "easySubpackage:open"
+    }
+  },
+  "panel": {
+    "main": "panel/index.js",
+    "type": "dockable",
+    "title": "easy subpackage",
+    "width": 420,
+    "height": 600
+  },
+  "dependencies": {
+    "fs-extra": "^8.0.1"
+  }
+}

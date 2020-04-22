@@ -1,1 +1,235 @@
-var _0x404a = ['[ConvertHelper]\x20搜索到mp3/wav文件数', 'length', 'remove', '-ac', '-ar', '[ConvertHelper]\x20convert\x20error\x20', 'statSync', 'size', 'removeSync', 'moveSync', 'replace', '.wav', '.mp3', '[ConvertHelper]\x20', 'basename', '\x20转换完成,压缩率', 'toFixed', '[ConvertHelper]\x20finished!\x20总共减小\x20=\x20', 'ceil', 'workDir', 'libwebp-0.4.1-rc1-windows-x64', 'cwebp.exe', 'libwebp-0.4.1-mac-10.8', 'cwebp', 'minFileLimt', '[ConvertHelper]\x20搜索到jpg/jpeg文件数', '[ConvertHelper]', 'kb，跳过处理', '.webp', 'jpgQuality', '-noalpha', '-jpeg_like', 'checkConvertSize', '\x20转换后文件增大忽略转换', 'unlinkSync', 'override', 'rename', '\x20文件已覆盖,\x20压缩率', '\x20转换完成,\x20压缩率', '[ConvertHelper]\x20搜索到png文件数', 'pngQuality', 'exports', 'Panel', 'open', 'converthelper', '[ConvertHelper]\x20Audio\x20convert\x20is\x20processing!', 'parse', 'then', 'error', 'converthelper:imgHandler\x20\x20', '[ConvertHelper]\x20Image\x20convert\x20is\x20processing!', 'find', 'path', 'fs-extra', 'child_process', 'log', 'Project', 'projectInfo', 'stdout', 'data', 'stderr', 'close', 'file', '[ConvertHelper]\x20workdir\x20=', 'platform', 'win32', 'join', 'libs', 'ffmpeg-20200303-60b1f85-win64-static', 'bin', 'ffmpeg.exe', 'ffmpeg-20200303-60b1f85-macos64-static', 'ffmpeg', 'temp', '_temp.mp3', 'concat']; (function (_0x450149, _0x16b398) { var _0x1221fa = function (_0x2878aa) { while (--_0x2878aa) { _0x450149['push'](_0x450149['shift']()); } }; _0x1221fa(++_0x16b398); }(_0x404a, 0x7f)); var _0x4277 = function (_0x31249d, _0x278fea) { _0x31249d = _0x31249d - 0x0; var _0x2d7d45 = _0x404a[_0x31249d]; return _0x2d7d45; }; 'use strict'; const find = require(_0x4277('0x0')); const path = require(_0x4277('0x1')); const fs = require('fs'); const fse = require(_0x4277('0x2')); const { spawn } = require(_0x4277('0x3')); const trace = Editor[_0x4277('0x4')]; let projectPath = ''; try { projectPath = Editor[_0x4277('0x5')][_0x4277('0x1')]; } catch (_0x1afa1d) { projectPath = Editor[_0x4277('0x6')][_0x4277('0x1')]; } let isAudioLock = ![]; let isImgLock = ![]; const spawnPromise = function (_0x598ad2, _0x49ed0e, _0x5116a2) { let _0x570eae = ''; let _0x590fd8 = ![]; return new Promise((_0x44c8d2, _0x65d785) => { const _0x1b03fc = spawn(_0x598ad2, _0x49ed0e, { 'cwd': _0x5116a2 }); _0x1b03fc[_0x4277('0x7')]['on'](_0x4277('0x8'), _0x3a9cef => { _0x570eae = _0x570eae + _0x3a9cef; }); _0x1b03fc[_0x4277('0x9')]['on'](_0x4277('0x8'), _0x463c2d => { _0x570eae = _0x570eae + _0x463c2d; _0x590fd8 = !![]; }); _0x1b03fc['on'](_0x4277('0xa'), _0x859998 => { trace(_0x570eae); _0x44c8d2(_0x570eae); }); }); }; const findPromise = function (_0x787fbe, _0x2eb1a8) { return new Promise((_0x1435ed, _0x1b8cdc) => { if (!_0x787fbe || !_0x2eb1a8) { _0x1b8cdc(''); return; } find[_0x4277('0xb')](_0x787fbe, _0x2eb1a8, function (_0x5d15cc) { _0x1435ed(_0x5d15cc); }); }); }; const timePromise = function (_0x1a9b30) { return new Promise((_0x40a2d2, _0xe81414) => { setTimeout(_0x40a2d2, _0x1a9b30); }); }; let audioHandler = async function (_0x3672a6) { trace(_0x4277('0xc') + _0x3672a6); let _0x56d853 = ''; if (require('os')[_0x4277('0xd')]() === _0x4277('0xe')) { _0x56d853 = path[_0x4277('0xf')](__dirname, _0x4277('0x10'), _0x4277('0x11'), _0x4277('0x12'), _0x4277('0x13')); } else { _0x56d853 = path[_0x4277('0xf')](__dirname, _0x4277('0x10'), _0x4277('0x14'), _0x4277('0x12'), _0x4277('0x15')); } let _0x185da6 = 0x0; let _0x198edc = path[_0x4277('0xf')](projectPath, _0x4277('0x16'), _0x4277('0x17')); let _0x330e60 = await findPromise(/\.mp3$/, _0x3672a6); _0x330e60 = _0x330e60[_0x4277('0x18')](await findPromise(/\.wav$/, _0x3672a6)); trace(_0x4277('0x19') + _0x330e60[_0x4277('0x1a')]); for (let _0xe4837a of _0x330e60) { await fse[_0x4277('0x1b')](_0x198edc); try { await spawnPromise(_0x56d853, ['-i', _0xe4837a, _0x4277('0x1c'), 0x1, _0x4277('0x1d'), 0xac44, _0x198edc]); } catch (_0x1099b7) { trace(_0x4277('0x1e'), _0x1099b7); continue; } let _0x138594 = fs[_0x4277('0x1f')](_0xe4837a); let _0x1e0f26 = fs[_0x4277('0x1f')](_0x198edc); _0x185da6 += _0x138594[_0x4277('0x20')] - _0x1e0f26[_0x4277('0x20')]; await fse[_0x4277('0x21')](_0xe4837a); await fse[_0x4277('0x22')](_0x198edc, _0xe4837a[_0x4277('0x23')](_0x4277('0x24'), _0x4277('0x25'))); trace(_0x4277('0x26') + path[_0x4277('0x27')](_0xe4837a) + _0x4277('0x28') + (_0x1e0f26[_0x4277('0x20')] / _0x138594[_0x4277('0x20')])[_0x4277('0x29')](0x2)); await timePromise(0x64); } trace(_0x4277('0x2a') + Math[_0x4277('0x2b')](_0x185da6 / 0x400) + 'kb'); }; let imgHandler = async function (_0x1c048b) { let _0x3410f7 = _0x1c048b[_0x4277('0x2c')]; let _0x52c13d = ''; if (require('os')[_0x4277('0xd')]() === _0x4277('0xe')) { _0x52c13d = path[_0x4277('0xf')](__dirname, _0x4277('0x10'), _0x4277('0x2d'), _0x4277('0x12'), _0x4277('0x2e')); } else { _0x52c13d = path[_0x4277('0xf')](__dirname, _0x4277('0x10'), _0x4277('0x2f'), _0x4277('0x12'), _0x4277('0x30')); } let _0xd2bb41 = _0x1c048b[_0x4277('0x31')] * 0x400; let _0x41eeda = await findPromise(/\.jpg$/, _0x3410f7); _0x41eeda = _0x41eeda[_0x4277('0x18')](await findPromise(/\.jpeg$/, _0x3410f7)); trace(_0x4277('0x32') + _0x41eeda[_0x4277('0x1a')]); let _0x30ccc2 = 0x0; for (let _0x38f228 of _0x41eeda) { let _0xdf4068 = fs[_0x4277('0x1f')](_0x38f228); if (_0xdf4068[_0x4277('0x20')] < _0xd2bb41) { trace(_0x4277('0x33') + path[_0x4277('0x27')](_0x38f228) + '小于' + _0x1c048b[_0x4277('0x31')] + _0x4277('0x34')); continue; } let _0x5acd41 = _0x38f228 + _0x4277('0x35'); try { await spawnPromise(_0x52c13d, ['-q', Math[_0x4277('0x2b')](_0x1c048b[_0x4277('0x36')]) + '', _0x4277('0x37'), _0x4277('0x38'), _0x38f228, '-o', _0x5acd41]); } catch (_0x571227) { trace(_0x4277('0x1e'), _0x571227); continue; } let _0x560c0c = fs[_0x4277('0x1f')](_0x5acd41); if (_0x1c048b[_0x4277('0x39')]) { if (_0xdf4068[_0x4277('0x20')] < _0x560c0c[_0x4277('0x20')]) { trace(_0x4277('0x26') + path[_0x4277('0x27')](_0x38f228) + _0x4277('0x3a')); fs[_0x4277('0x3b')](_0x5acd41); continue; } } _0x30ccc2 += _0xdf4068[_0x4277('0x20')] - _0x560c0c[_0x4277('0x20')]; if (_0x1c048b[_0x4277('0x3c')]) { fs[_0x4277('0x3b')](_0x38f228); await timePromise(0xc8); await fse[_0x4277('0x3d')](_0x5acd41, _0x38f228); trace(_0x4277('0x26') + path[_0x4277('0x27')](_0x38f228) + _0x4277('0x3e') + (_0x560c0c[_0x4277('0x20')] / _0xdf4068[_0x4277('0x20')])[_0x4277('0x29')](0x2)); } else { trace(_0x4277('0x26') + path[_0x4277('0x27')](_0x38f228) + _0x4277('0x3f') + (_0x560c0c[_0x4277('0x20')] / _0xdf4068[_0x4277('0x20')])[_0x4277('0x29')](0x2)); } } let _0x35ced8 = await findPromise(/\.png$/, _0x3410f7); trace(_0x4277('0x40') + _0x35ced8[_0x4277('0x1a')]); for (let _0x371567 of _0x35ced8) { let _0xdf4068 = fs[_0x4277('0x1f')](_0x371567); if (_0xdf4068[_0x4277('0x20')] < _0xd2bb41) { trace(_0x4277('0x33') + path[_0x4277('0x27')](_0x371567) + '小于' + _0x1c048b[_0x4277('0x31')] + _0x4277('0x34')); continue; } let _0x5acd41 = _0x371567 + _0x4277('0x35'); try { await spawnPromise(_0x52c13d, ['-q', Math[_0x4277('0x2b')](_0x1c048b[_0x4277('0x41')]) + '', _0x371567, '-o', _0x5acd41]); } catch (_0x218d7a) { trace(_0x4277('0x1e'), _0x218d7a); continue; } let _0x560c0c = fs[_0x4277('0x1f')](_0x5acd41); if (_0x1c048b[_0x4277('0x39')]) { if (_0xdf4068[_0x4277('0x20')] < _0x560c0c[_0x4277('0x20')]) { trace(_0x4277('0x26') + path[_0x4277('0x27')](_0x371567) + _0x4277('0x3a')); fs[_0x4277('0x3b')](_0x5acd41); continue; } } _0x30ccc2 += _0xdf4068[_0x4277('0x20')] - _0x560c0c[_0x4277('0x20')]; if (_0x1c048b[_0x4277('0x3c')]) { fs[_0x4277('0x3b')](_0x371567); await timePromise(0xc8); await fse[_0x4277('0x3d')](_0x5acd41, _0x371567); trace(_0x4277('0x26') + path[_0x4277('0x27')](_0x371567) + _0x4277('0x3e') + (_0x560c0c[_0x4277('0x20')] / _0xdf4068[_0x4277('0x20')])[_0x4277('0x29')](0x2)); } else { trace(_0x4277('0x26') + path[_0x4277('0x27')](_0x371567) + _0x4277('0x3f') + (_0x560c0c[_0x4277('0x20')] / _0xdf4068[_0x4277('0x20')])[_0x4277('0x29')](0x2)); } } trace(_0x4277('0x2a') + Math[_0x4277('0x2b')](_0x30ccc2 / 0x400) + 'kb'); }; module[_0x4277('0x42')] = { 'load'() { }, 'unload'() { }, 'messages': { 'converthelper:open'() { Editor[_0x4277('0x43')][_0x4277('0x44')](_0x4277('0x45')); }, 'converthelper:audioHandler'(_0x5bb2f0, _0x43d363) { if (isAudioLock) { trace(_0x4277('0x46')); return; } isAudioLock = !![]; try { audioHandler(JSON[_0x4277('0x47')](_0x43d363)[_0x4277('0x2c')])[_0x4277('0x48')](() => { isAudioLock = ![]; }, _0x101032 => { isAudioLock = ![]; trace(_0x101032); }); } catch (_0x22e22d) { Editor[_0x4277('0x49')](_0x22e22d); } }, 'converthelper:imgHandler'(_0x1f842d, _0x2b70af) { trace(_0x4277('0x4a'), _0x1f842d, _0x2b70af); if (isImgLock) { trace(_0x4277('0x4b')); return; } isImgLock = !![]; try { imgHandler(JSON[_0x4277('0x47')](_0x2b70af))[_0x4277('0x48')](() => { isImgLock = ![]; }, _0x127ff6 => { isImgLock = ![]; trace(_0x127ff6); }); } catch (_0x1f550a) { trace(_0x1f550a); } } } };
+'use strict';
+const find = require('find');
+const path = require('path');
+const fs = require('fs');
+const fse = require('fs-extra');
+const { spawn } = require('child_process');
+const trace = Editor.log;
+
+let projectPath = "";
+try {
+    projectPath = Editor.Project.path;
+} catch (e) {
+    projectPath = Editor.projectInfo.path;
+}
+let isAudioLock = false;
+let isImgLock = false;
+
+const spawnPromise = function (command, params, cwd) {
+    let _log = "";
+    let _error = false;
+    return new Promise((resolve, reject) => {
+        const ls = spawn(command, params, { cwd: cwd });
+        ls.stdout.on('data', (data) => {
+            _log = _log + data;
+        });
+
+        ls.stderr.on('data', (data) => {
+            _log = _log + data;
+            _error = true;
+        });
+
+        ls.on('close', (code) => {
+            trace(_log);
+            resolve(_log);
+        });
+    })
+}
+const findPromise = function (reg, dir) {
+    return new Promise((resolve, reject) => {
+        if (!reg || !dir) {
+            reject("");
+            return;
+        }
+        find.file(reg, dir, function (files) {
+            resolve(files);
+        })
+    })
+}
+const timePromise = function (duration) {
+    return new Promise((resolve, reject) => {
+        setTimeout(resolve, duration);
+    })
+}
+
+let audioHandler = async function (workdir) {
+    trace("[ConvertHelper] workdir =" + workdir)
+    let cmdBin = "";
+    if (require('os').platform() === "win32") {
+        cmdBin = path.join(__dirname, "libs", "ffmpeg-20200303-60b1f85-win64-static", "bin", "ffmpeg.exe")
+    } else {
+        cmdBin = path.join(__dirname, "libs", "ffmpeg-20200303-60b1f85-macos64-static", "bin", "ffmpeg")
+    }
+    let reduceSize = 0; // 减少的总大小
+    let convertPath = path.join(projectPath, "temp", "_temp.mp3");
+    let mp3files = await findPromise(/\.mp3$/, workdir);
+    mp3files = mp3files.concat(await findPromise(/\.wav$/, workdir));
+    trace(`[ConvertHelper] 搜索到mp3/wav文件数${mp3files.length}`)
+    for (let mp3file of mp3files) {
+        await fse.remove(convertPath);
+        try {
+            await spawnPromise(cmdBin, [
+                '-i', mp3file,
+                '-ac', 1,
+                '-ar', 44100,
+                convertPath
+            ]);
+        } catch (e) {
+            trace("[ConvertHelper] convert error ", e);
+            continue;
+        }
+        let ss1 = fs.statSync(mp3file);
+        let ss2 = fs.statSync(convertPath);
+        reduceSize += ss1.size - ss2.size;
+        await fse.removeSync(mp3file);
+        await fse.moveSync(convertPath, mp3file.replace(".wav", ".mp3"));
+        trace(`[ConvertHelper] ${path.basename(mp3file)} 转换完成,压缩率${(ss2.size / ss1.size).toFixed(2)}`);
+        await timePromise(100);
+    }
+    trace('[ConvertHelper] finished! 总共减小 = ' + Math.ceil(reduceSize / 1024) + "kb");
+}
+
+let imgHandler = async function (imgInfo) {
+    let workdir = imgInfo.workDir;
+    let cmdBin = "";
+    if (require('os').platform() === "win32") {
+        cmdBin = path.join(__dirname, "libs", "libwebp-0.4.1-rc1-windows-x64", "bin", "cwebp.exe")
+    } else {
+        cmdBin = path.join(__dirname, "libs", "libwebp-0.4.1-mac-10.8", "bin", "cwebp")
+    }
+    let fileLimt = imgInfo.minFileLimt * 1024;
+    let jpgfiles = await findPromise(/\.jpg$/, workdir);
+    jpgfiles = jpgfiles.concat(await findPromise(/\.jpeg$/, workdir))
+    trace(`[ConvertHelper] 搜索到jpg/jpeg文件数${jpgfiles.length}`)
+    let reduceSize = 0; // 减少的总大小
+    for (let jpgfile of jpgfiles) {
+        let ss1 = fs.statSync(jpgfile);
+        if (ss1.size < fileLimt) {
+            trace(`[ConvertHelper]${path.basename(jpgfile)}小于${imgInfo.minFileLimt}kb，跳过处理`);
+            continue;
+        }
+        let newfilepath = jpgfile + '.webp';
+        try {
+            await spawnPromise(cmdBin, [
+                "-q", Math.ceil(imgInfo.jpgQuality) + "",
+                "-noalpha", "-jpeg_like",
+                jpgfile,
+                "-o",
+                newfilepath
+            ]);
+        } catch (e) {
+            trace("[ConvertHelper] convert error ", e);
+            continue;
+        }
+        let ss2 = fs.statSync(newfilepath);
+        if (imgInfo.checkConvertSize) {
+            if (ss1.size < ss2.size) {
+                trace(`[ConvertHelper] ${path.basename(jpgfile)} 转换后文件增大忽略转换`);
+                fs.unlinkSync(newfilepath);
+                continue;
+            }
+        }
+        reduceSize += ss1.size - ss2.size;
+        if (imgInfo.override) {
+            fs.unlinkSync(jpgfile);
+            await timePromise(200);
+            await fse.rename(newfilepath, jpgfile);
+            trace(`[ConvertHelper] ${path.basename(jpgfile)} 文件已覆盖, 压缩率${(ss2.size / ss1.size).toFixed(2)}`);
+        } else {
+            trace(`[ConvertHelper] ${path.basename(jpgfile)} 转换完成, 压缩率${(ss2.size / ss1.size).toFixed(2)}`);
+        }
+    }
+    let pngfiles = await findPromise(/\.png$/, workdir);
+    trace(`[ConvertHelper] 搜索到png文件数${pngfiles.length}`)
+    for (let jpgfile of pngfiles) {
+        let ss1 = fs.statSync(jpgfile);
+        if (ss1.size < fileLimt) {
+            trace(`[ConvertHelper]${path.basename(jpgfile)}小于${imgInfo.minFileLimt}kb，跳过处理`);
+            continue;
+        }
+        let newfilepath = jpgfile + '.webp';
+        try {
+            await spawnPromise(cmdBin, [
+                "-q", Math.ceil(imgInfo.pngQuality) + "",
+                jpgfile,
+                "-o",
+                newfilepath
+            ]);
+        } catch (e) {
+            trace("[ConvertHelper] convert error ", e);
+            continue;
+        }
+        let ss2 = fs.statSync(newfilepath);
+        if (imgInfo.checkConvertSize) {
+            if (ss1.size < ss2.size) {
+                trace(`[ConvertHelper] ${path.basename(jpgfile)} 转换后文件增大忽略转换`);
+                fs.unlinkSync(newfilepath);
+                continue;
+            }
+        }
+        reduceSize += ss1.size - ss2.size;
+        if (imgInfo.override) {
+            fs.unlinkSync(jpgfile);
+            await timePromise(200);
+            await fse.rename(newfilepath, jpgfile);
+            trace(`[ConvertHelper] ${path.basename(jpgfile)} 文件已覆盖, 压缩率${(ss2.size / ss1.size).toFixed(2)}`);
+        } else {
+            trace(`[ConvertHelper] ${path.basename(jpgfile)} 转换完成, 压缩率${(ss2.size / ss1.size).toFixed(2)}`);
+        }
+    }
+    trace('[ConvertHelper] finished! 总共减小 = ' + Math.ceil(reduceSize / 1024) + "kb");
+}
+
+
+module.exports = {
+    load() {
+        // execute when package loaded
+    },
+
+    unload() {
+        // execute when package unloaded
+    },
+
+    // register your ipc messages here
+    messages: {
+        'converthelper:open'() {
+            // open entry panel registered in package.json
+            Editor.Panel.open('converthelper');
+        },
+        'converthelper:audioHandler'(event, params) {
+            if (isAudioLock) {
+                trace('[ConvertHelper] Audio convert is processing!');
+                return;
+            }
+            isAudioLock = true;
+            try {
+                audioHandler(JSON.parse(params).workDir).then(() => {
+                    isAudioLock = false;
+                }, (err) => {
+                    isAudioLock = false;
+                    trace(err);
+                })
+            } catch (e) {
+                Editor.error(e);
+            }
+        },
+        'converthelper:imgHandler'(event, params) {
+            trace("converthelper:imgHandler  ", event, params)
+            if (isImgLock) {
+                trace('[ConvertHelper] Image convert is processing!');
+                return;
+            }
+            isImgLock = true;
+            try {
+                imgHandler(JSON.parse(params)).then(() => {
+                    isImgLock = false;
+                }, (err) => {
+                    isImgLock = false;
+                    trace(err)
+                })
+            } catch (e) {
+                trace(e);
+            }
+        },
+    },
+};

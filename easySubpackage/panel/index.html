@@ -1,0 +1,40 @@
+<div class="flex-1 mainDiv " id="mainDiv">
+    <h3> Creator系统构建完,自动按照下面配置分包</h3>
+    <div class="hh-container">
+        <div class="hh-row" tooltip="仅支持iOS和Android原生打包">
+            <div class="hh-col1">
+                开启分包
+            </div>
+            <div class="hh-col2">
+                <ui-checkbox v-value="isOpenSubpackage" tooltip="仅支持iOS和Android原生打包"></ui-checkbox>
+            </div>
+        </div>
+        <div class=" hh-row">
+            <div class="hh-col1">
+                分包资源
+            </div>
+            <div class="hh-col2">
+                <ui-text-area resize class="textaera" v-value="subpackagePaths" placeholder="使用换行或者,区分">
+                </ui-text-area>
+            </div>
+        </div>
+        <div class="hh-row">
+            <div class="hh-col1">
+                <p>说明:</p>
+            </div>
+            <div class="hh-col2">
+                <p>请填写assets下面的资源路径，如assets/resources/npcskeleton，还可以具体指定哪个文件提取出来，如assets/resources/bg/world.png，多行之间请用换行或者,区分
+                </p>
+                <p>easySubpackage只会处理构建完成后的res下面的资源，src脚本文件不做任何处理</p>
+            </div>
+        </div>
+        <div class="hh-row">
+            <div class="hh-col1">
+                <p></p>
+            </div>
+            <div class="hh-col2">
+                <ui-button class="lBtn green" @click="saveConfig"">保存配置</ui-button>
+            </div>
+        </div>
+    </div>
+</div>
