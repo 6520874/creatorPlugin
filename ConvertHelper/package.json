@@ -16,9 +16,10 @@
     "width": 400,
     "height": 300
   },
-  "scene-script": "scene.js",
   "dependencies": {
+    "find": "^0.3.0",
     "fs-extra": "^8.0.1",
-    "find": "^0.3.0"
+    "images": "^3.0.2",
+    "pngjs": "^5.0.0"
   }
 }

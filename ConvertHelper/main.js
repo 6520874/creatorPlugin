@@ -1,9 +1,12 @@
 'use strict';
-const find = require('find');
 const path = require('path');
 const fs = require('fs');
 const fse = require('fs-extra');
-const { spawn } = require('child_process');
+const PNG = require("pngjs").PNG;
+
+const audioCompress = require('./audioCompress');
+const towebp = require('./towebp');
+
 const trace = Editor.log;
 
 let projectPath = "";
@@ -12,179 +15,10 @@ try {
 } catch (e) {
     projectPath = Editor.projectInfo.path;
 }
-let isAudioLock = false;
-let isImgLock = false;
-
-const spawnPromise = function (command, params, cwd) {
-    let _log = "";
-    let _error = false;
-    return new Promise((resolve, reject) => {
-        const ls = spawn(command, params, { cwd: cwd });
-        ls.stdout.on('data', (data) => {
-            _log = _log + data;
-        });
-
-        ls.stderr.on('data', (data) => {
-            _log = _log + data;
-            _error = true;
-        });
-
-        ls.on('close', (code) => {
-            trace(_log);
-            resolve(_log);
-        });
-    })
-}
-const findPromise = function (reg, dir) {
-    return new Promise((resolve, reject) => {
-        if (!reg || !dir) {
-            reject("");
-            return;
-        }
-        find.file(reg, dir, function (files) {
-            resolve(files);
-        })
-    })
-}
-const timePromise = function (duration) {
-    return new Promise((resolve, reject) => {
-        setTimeout(resolve, duration);
-    })
-}
-
-let audioHandler = async function (workdir) {
-    trace("[ConvertHelper] workdir =" + workdir)
-    let cmdBin = "";
-    if (require('os').platform() === "win32") {
-        cmdBin = path.join(__dirname, "libs", "ffmpeg-20200303-60b1f85-win64-static", "bin", "ffmpeg.exe")
-    } else {
-        cmdBin = path.join(__dirname, "libs", "ffmpeg-20200303-60b1f85-macos64-static", "bin", "ffmpeg")
-    }
-    let reduceSize = 0; // 减少的总大小
-    let convertPath = path.join(projectPath, "temp", "_temp.mp3");
-    let mp3files = await findPromise(/\.mp3$/, workdir);
-    mp3files = mp3files.concat(await findPromise(/\.wav$/, workdir));
-    trace(`[ConvertHelper] 搜索到mp3/wav文件数${mp3files.length}`)
-    for (let mp3file of mp3files) {
-        await fse.remove(convertPath);
-        try {
-            await spawnPromise(cmdBin, [
-                '-i', mp3file,
-                '-ac', 1,
-                '-ar', 44100,
-                convertPath
-            ]);
-        } catch (e) {
-            trace("[ConvertHelper] convert error ", e);
-            continue;
-        }
-        let ss1 = fs.statSync(mp3file);
-        let ss2 = fs.statSync(convertPath);
-        reduceSize += ss1.size - ss2.size;
-        await fse.removeSync(mp3file);
-        await fse.moveSync(convertPath, mp3file.replace(".wav", ".mp3"));
-        trace(`[ConvertHelper] ${path.basename(mp3file)} 转换完成,压缩率${(ss2.size / ss1.size).toFixed(2)}`);
-        await timePromise(100);
-    }
-    trace('[ConvertHelper] finished! 总共减小 = ' + Math.ceil(reduceSize / 1024) + "kb");
-}
-
-let imgHandler = async function (imgInfo) {
-    let workdir = imgInfo.workDir;
-    let cmdBin = "";
-    if (require('os').platform() === "win32") {
-        cmdBin = path.join(__dirname, "libs", "libwebp-0.4.1-rc1-windows-x64", "bin", "cwebp.exe")
-    } else {
-        cmdBin = path.join(__dirname, "libs", "libwebp-0.4.1-mac-10.8", "bin", "cwebp")
-    }
-    let fileLimt = imgInfo.minFileLimt * 1024;
-    let jpgfiles = await findPromise(/\.jpg$/, workdir);
-    jpgfiles = jpgfiles.concat(await findPromise(/\.jpeg$/, workdir))
-    trace(`[ConvertHelper] 搜索到jpg/jpeg文件数${jpgfiles.length}`)
-    let reduceSize = 0; // 减少的总大小
-    for (let jpgfile of jpgfiles) {
-        let ss1 = fs.statSync(jpgfile);
-        if (ss1.size < fileLimt) {
-            trace(`[ConvertHelper]${path.basename(jpgfile)}小于${imgInfo.minFileLimt}kb，跳过处理`);
-            continue;
-        }
-        let newfilepath = jpgfile + '.webp';
-        try {
-            await spawnPromise(cmdBin, [
-                "-q", Math.ceil(imgInfo.jpgQuality) + "",
-                "-noalpha", "-jpeg_like",
-                jpgfile,
-                "-o",
-                newfilepath
-            ]);
-        } catch (e) {
-            trace("[ConvertHelper] convert error ", e);
-            continue;
-        }
-        let ss2 = fs.statSync(newfilepath);
-        if (imgInfo.checkConvertSize) {
-            if (ss1.size < ss2.size) {
-                trace(`[ConvertHelper] ${path.basename(jpgfile)} 转换后文件增大忽略转换`);
-                fs.unlinkSync(newfilepath);
-                continue;
-            }
-        }
-        reduceSize += ss1.size - ss2.size;
-        if (imgInfo.override) {
-            fs.unlinkSync(jpgfile);
-            await timePromise(200);
-            await fse.rename(newfilepath, jpgfile);
-            trace(`[ConvertHelper] ${path.basename(jpgfile)} 文件已覆盖, 压缩率${(ss2.size / ss1.size).toFixed(2)}`);
-        } else {
-            trace(`[ConvertHelper] ${path.basename(jpgfile)} 转换完成, 压缩率${(ss2.size / ss1.size).toFixed(2)}`);
-        }
-    }
-    let pngfiles = await findPromise(/\.png$/, workdir);
-    trace(`[ConvertHelper] 搜索到png文件数${pngfiles.length}`)
-    for (let jpgfile of pngfiles) {
-        let ss1 = fs.statSync(jpgfile);
-        if (ss1.size < fileLimt) {
-            trace(`[ConvertHelper]${path.basename(jpgfile)}小于${imgInfo.minFileLimt}kb，跳过处理`);
-            continue;
-        }
-        let newfilepath = jpgfile + '.webp';
-        try {
-            await spawnPromise(cmdBin, [
-                "-q", Math.ceil(imgInfo.pngQuality) + "",
-                jpgfile,
-                "-o",
-                newfilepath
-            ]);
-        } catch (e) {
-            trace("[ConvertHelper] convert error ", e);
-            continue;
-        }
-        let ss2 = fs.statSync(newfilepath);
-        if (imgInfo.checkConvertSize) {
-            if (ss1.size < ss2.size) {
-                trace(`[ConvertHelper] ${path.basename(jpgfile)} 转换后文件增大忽略转换`);
-                fs.unlinkSync(newfilepath);
-                continue;
-            }
-        }
-        reduceSize += ss1.size - ss2.size;
-        if (imgInfo.override) {
-            fs.unlinkSync(jpgfile);
-            await timePromise(200);
-            await fse.rename(newfilepath, jpgfile);
-            trace(`[ConvertHelper] ${path.basename(jpgfile)} 文件已覆盖, 压缩率${(ss2.size / ss1.size).toFixed(2)}`);
-        } else {
-            trace(`[ConvertHelper] ${path.basename(jpgfile)} 转换完成, 压缩率${(ss2.size / ss1.size).toFixed(2)}`);
-        }
-    }
-    trace('[ConvertHelper] finished! 总共减小 = ' + Math.ceil(reduceSize / 1024) + "kb");
-}
-
 
 let spriteEditHandler = function (webcontent) {
-
     let jscode = `
-    // if (!document.querySelector("#btn_crop")) {
+    if (document.querySelector("#btn_crop") == null) {
         let btn_crop = document.createElement("ui-button");
         btn_crop.id = "btn_crop";
         btn_crop.innerText = "Cropping Image";
@@ -192,7 +26,7 @@ let spriteEditHandler = function (webcontent) {
         btn_crop.onclick = function () {
             // 遍历当前的所有ui-num-input
             let elements = document.querySelector('ui-panel-frame').shadowRoot.querySelectorAll('ui-num-input');
-            let crops = [];
+            let crops = {};
             for (let inputElement of elements) {
                 let attrs = inputElement.attributes;
                 let object = {};
@@ -204,7 +38,7 @@ let spriteEditHandler = function (webcontent) {
                         object.value = aaa.value;
                     }
                 }
-                crops.push(object);
+                crops[object.id] = object.value
             }
             Editor.Ipc.sendToMain('converthelper:cropImage', {
                 url: location.href,
@@ -212,17 +46,11 @@ let spriteEditHandler = function (webcontent) {
             });
         }
         document.body.appendChild(btn_crop);
-    // }
+    }
 `
     webcontent.executeJavaScript(jscode, true).then((result) => {
         trace(result) // Will be the JSON object from the fetch call
     })
-    // webcontent.on('did-finish-load', async function () {
-    //     let ret = await contents.executeJavaScript(jscode, true);
-    //     trace("executeJavaScript" + ret);
-    //     // const key = await contents.insertCSS('html, body { background-color: #f00; }')
-    //     // contents.removeInsertedCSS(key)
-    // })
 }
 
 module.exports = {
@@ -262,47 +90,124 @@ module.exports = {
         },
 
         'converthelper:audioHandler'(event, params) {
-            if (isAudioLock) {
-                trace('[ConvertHelper] Audio convert is processing!');
-                return;
-            }
-            isAudioLock = true;
-            try {
-                audioHandler(JSON.parse(params).workDir).then(() => {
-                    isAudioLock = false;
-                }, (err) => {
-                    isAudioLock = false;
-                    trace(err);
-                })
-            } catch (e) {
-                Editor.error(e);
-            }
+            audioCompress(JSON.parse(params).workDir);
         },
         'converthelper:imgHandler'(event, params) {
             trace("converthelper:imgHandler  ", event, params)
-            if (isImgLock) {
-                trace('[ConvertHelper] Image convert is processing!');
-                return;
-            }
-            isImgLock = true;
-            try {
-                imgHandler(JSON.parse(params)).then(() => {
-                    isImgLock = false;
-                }, (err) => {
-                    isImgLock = false;
-                    trace(err)
-                })
-            } catch (e) {
-                trace(e);
-            }
+            towebp(JSON.parse(params));
         },
         'converthelper:cropImage'(event, params) {
             // open entry panel registered in package.json
             let fileInfo = JSON.parse(decodeURIComponent(params.url).split("#")[1]);
-            trace("fileInfo", fileInfo)
-            trace("_pathToUuid", cc.loader._assetTables["assets"]._pathToUuid)
+            let crops = params.crops;
+            trace("crops", crops);
+            // 找到该图片
+            let fileuuid = fileInfo["panelArgv"]['uuid'];
+            ''.substr(0, 2)
+            let imgjsonpath = path.join(projectPath, "library", 'imports', fileuuid.substr(0, 2), fileuuid + ".json");
+            if (!fse.existsSync(imgjsonpath)) {
+                trace(imgjsonpath + '不存在！');
+                return;
+            }
+            let jsoninfo = JSON.parse(fse.readFileSync(imgjsonpath, 'utf8'));
+            let uuidmtimepath = path.join(projectPath, "library", 'uuid-to-mtime.json');
+            if (!fse.existsSync(uuidmtimepath)) {
+                trace(uuidmtimepath + '不存在！');
+                return;
+            }
+            let uuidInfo = JSON.parse(fse.readFileSync(uuidmtimepath, 'utf8'));
+            let imgInfo = uuidInfo[jsoninfo["content"]["texture"]];
+            let imgrelativePath = imgInfo["relativePath"];
+            if (!imgrelativePath) {
+                return;
+            }
 
-            trace("queryPathByUuid=", Editor.assetdb.queryPathByUuid('bd168dd0-272d-40a3-b87b-1797a0766656'));
+            let imgPath = path.join(projectPath, "assets", imgrelativePath);
+            if (!imgPath.endsWith(".png")) {
+                Editor.Dialog.messageBox({ type: "info", message: "Sorry,The tool only supports png format. " })
+                return;
+            }
+            trace("处理的图片路径=" + imgPath);
+            let sizeL = parseInt(crops["inputL"]);
+            let sizeR = parseInt(crops["inputR"])
+            let sizeT = parseInt(crops["inputT"])
+            let sizeB = parseInt(crops["inputB"])
+            // let resultImg = images(sizeL + sizeR, sizeT + sizeB);
+            // let originImg = images(imgPath);
+            // let originSize = originImg.size();
+
+            fs.createReadStream(imgPath)
+                .pipe(
+                    new PNG({
+                        filterType: 4,
+                    })
+                )
+                .on("parsed", function () {
+                    trace("图片解析完成")
+                    let png = new PNG({
+                        width: sizeL + sizeR,
+                        height: sizeT + sizeB,
+                        filterType: 4
+                    });
+                    trace("生成新的png width=" + png.width + "  height" + png.height)
+                    let de_width = sizeL + sizeR;
+                    let de_height = sizeT + sizeB;
+                    for (let y = 0; y < this.height; y++) {
+                        for (let x = 0; x < this.width; x++) {
+                            let idx = (this.width * y + x) << 2;
+                            // 左上
+                            if (x <= sizeL && y <= sizeT) {
+                                let idx1 = (de_width * y + x) << 2
+                                png.data[idx1] = this.data[idx];
+                                png.data[idx1 + 1] = this.data[idx + 1];
+                                png.data[idx1 + 2] = this.data[idx + 2];
+                                png.data[idx1 + 3] = this.data[idx + 3];
+                                continue;
+                            }
+                            // 右上
+                            if (x >= (this.width - sizeR) && y <= sizeT) {
+                                let _x = x - (this.width - sizeL - sizeR);
+                                let idx1 = (de_width * y + _x) << 2;
+                                png.data[idx1] = this.data[idx];
+                                png.data[idx1 + 1] = this.data[idx + 1];
+                                png.data[idx1 + 2] = this.data[idx + 2];
+                                png.data[idx1 + 3] = this.data[idx + 3];
+                                continue;
+                            }
+                            // 左下
+                            if (x <= sizeL && y >= (this.height - sizeB)) {
+                                let _y = y - (this.height - sizeT - sizeB);
+                                let idx1 = (de_width * _y + x) << 2
+                                png.data[idx1] = this.data[idx];
+                                png.data[idx1 + 1] = this.data[idx + 1];
+                                png.data[idx1 + 2] = this.data[idx + 2];
+                                png.data[idx1 + 3] = this.data[idx + 3];
+                                continue;
+                            }
+                            // 右下
+                            if (x >= (this.width - sizeR) && y >= (this.height - sizeB)) {
+                                let _y = y - (this.height - sizeT - sizeB);
+                                let _x = x - (this.width - sizeL - sizeR);
+                                let idx1 = (de_width * _y + _x) << 2;
+                                png.data[idx1] = this.data[idx];
+                                png.data[idx1 + 1] = this.data[idx + 1];
+                                png.data[idx1 + 2] = this.data[idx + 2];
+                                png.data[idx1 + 3] = this.data[idx + 3];
+                                continue;
+                            }
+                        }
+                    }
+                    let rs = png.pack();
+                    let ws = fs.createWriteStream(imgPath.replace(".png", "_9grid.png"));
+                    rs.pipe(ws);
+                });
+
+
+            // resultImg.draw(originImg, 0, 0, sizeL, sizeT);
+            // resultImg.draw(originImg, 0, originSize.height - sizeB, sizeL, sizeB);
+            // resultImg.draw(originImg, originSize.width - sizeR, 0, sizeR, sizeT);
+            // resultImg.draw(originImg, originSize.width - sizeR, originSize.height - sizeB, sizeR, sizeB);
+            // resultImg.save(path.join(projectPath, "test.png"));
         },
     },
 };
