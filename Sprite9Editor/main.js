@@ -16,26 +16,41 @@ try {
 let spriteEditHandler = function (webcontent) {
     let jscode = `
     if (document.querySelector("#btn_crop") == null) {
+        console.log("插入btn_crop")
         let btn_crop = document.createElement("ui-button");
         btn_crop.id = "btn_crop";
         btn_crop.innerText = "Cropping Image";
         btn_crop.style.cssText = "position:fixed;bottom:20px;left:20px";
         btn_crop.onclick = function () {
-            // 遍历当前的所有ui-num-input
-            let elements = document.querySelector('ui-panel-frame').shadowRoot.querySelectorAll('ui-num-input');
+            let elements = document.querySelectorAll('editor-unit-input');
             let crops = {};
-            for (let inputElement of elements) {
-                let attrs = inputElement.attributes;
-                let object = {};
-                for (let aaa of attrs) {
-                    if (aaa.name == "id") {
-                        object.id = aaa.value;
-                    }
-                    if (aaa.name == "value") {
-                        object.value = aaa.value;
-                    }
+            if (elements && elements.length > 0) {
+                // 兼容 2.1.x
+                for (let inputElement of elements) {
+                    crops[inputElement.id] = inputElement.value;
                 }
-                crops[object.id] = object.value
+            } else {
+                // 兼容2.2.x
+                // 遍历当前的所有ui-num-input
+                try{
+                    elements = document.querySelector('ui-panel-frame').shadowRoot.querySelectorAll('ui-num-input');
+                    for (let inputElement of elements) {
+                        let attrs = inputElement.attributes;
+                        let object = {};
+                        for (let aaa of attrs) {
+                            if (aaa.name == "id") {
+                                object.id = aaa.value;
+                            }
+                            if (aaa.name == "value") {
+                                object.value = aaa.value;
+                            }
+                        }
+                        crops[object.id] = object.value
+                    }
+                }catch(e){
+                    Editor.Dialog.messageBox({ type: "info", message: "不支持裁剪，请使用2.1.x以及以上的引擎再试！ " });
+                    return;
+                }
             }
             Editor.Ipc.sendToMain('sprite9editor:cropImage', {
                 url: location.href,
@@ -43,18 +58,22 @@ let spriteEditHandler = function (webcontent) {
             });
         }
         document.body.appendChild(btn_crop);
-
-        require('electron').ipcRenderer.on('sprite9editor:imgcropFinished', function(event, args) {
-            console.log(event,args)
+        require('electron').ipcRenderer.on('sprite9editor:imgcropFinished', function (event, args) {
+            console.log(event, args)
             // Editor.assetdb.import([args], 'db://assets/resources');
             Editor.assetdb.refresh(args.db);
         });
-
     }
-`;
-    webcontent.executeJavaScript(jscode, true).then((result) => {
-        trace(result) // Will be the JSON object from the fetch call
+    `;
+    webcontent.on('did-finish-load', async function () {
+        try {
+            let res = await webcontent.executeJavaScript(jscode, true)
+            trace(res)
+        } catch (e) {
+            trace(e)
+        }
     })
+
 }
 
 module.exports = {
@@ -64,6 +83,7 @@ module.exports = {
             Editor.Panel.$open = Editor.Panel.open;
             Editor.Panel.open = function (...args) {
                 Editor.Panel.$open(...args);
+                // trace(args)
                 setTimeout(() => {
                     for (let webcontent of webContents.getAllWebContents()) {
                         // Editor.log("*******" + webcontent.id + webcontent.getTitle(), webcontent.getURL());
@@ -121,7 +141,7 @@ module.exports = {
                 Editor.Dialog.messageBox({ type: "info", message: "抱歉，工具暂时只支持PNG格式图片. " })
                 return;
             }
-            trace("处理的图片路径=" + imgPath);
+            trace("处理的图片路径 " + imgPath);
             let sizeL = parseInt(crops["inputL"]);
             let sizeR = parseInt(crops["inputR"])
             let sizeT = parseInt(crops["inputT"])
