@@ -1,9 +1,20 @@
+/*
+ * @CreateTime: Nov 11, 2020 3:04 PM 
+ * @Author: howe 
+ * @Contact: ihowe@outlook.com 
+* @Last Modified By: howe
+* @Last Modified Time: Nov 11, 2020 3:09 PM
+ * @Description: Cocos Sprite9EditorEx plugin!
+ */
+
+
 'use strict';
 const path = require('path');
 const fs = require('fs');
 const fse = require('fs-extra');
 const PNG = require("pngjs").PNG;
-const { webContents } = require('electron')
+const { webContents, ipcMain } = require('electron')
+
 const trace = Editor.log;
 
 let projectPath = "";
@@ -13,24 +24,28 @@ try {
     projectPath = Editor.projectInfo.path;
 }
 
-let spriteEditHandler = function (webcontent) {
+let spriteEditHandler = async function (webcontent) {
     let jscode = `
     if (document.querySelector("#btn_crop") == null) {
         console.log("插入btn_crop")
+        let div_container = document.createElement("div");
+        div_container.style.cssText = "position:fixed;bottom:10px;left:10px;display: flex;align-items:center;";
+        document.body.appendChild(div_container);
         let btn_crop = document.createElement("ui-button");
         btn_crop.id = "btn_crop";
         btn_crop.innerText = "Cropping Image";
-        btn_crop.style.cssText = "position:fixed;bottom:20px;left:20px";
+        // btn_crop.style.cssText = "position:fixed;bottom:20px;left:40px";
         btn_crop.onclick = function () {
             let elements = document.querySelectorAll('editor-unit-input');
             let crops = {};
+            crops["override"] = check_isOverride.value;
             if (elements && elements.length > 0) {
                 // 兼容 2.1.x
                 for (let inputElement of elements) {
                     crops[inputElement.id] = inputElement.value;
                 }
             } else {
-                // 兼容2.2.x
+                // 兼容2.2.x+
                 // 遍历当前的所有ui-num-input
                 try{
                     elements = document.querySelector('ui-panel-frame').shadowRoot.querySelectorAll('ui-num-input');
@@ -57,56 +72,81 @@ let spriteEditHandler = function (webcontent) {
                 crops: crops
             });
         }
-        document.body.appendChild(btn_crop);
+        div_container.appendChild(btn_crop);
+
+        let check_isOverride = document.createElement("ui-checkbox");
+        check_isOverride.id = "check_isOverride";
+        check_isOverride.innerText = "Override";
+        // check_isOverride.style.cssText = "position:fixed;bottom:20px;left:10px";
+        div_container.appendChild(check_isOverride);
+
         require('electron').ipcRenderer.on('sprite9editor:imgcropFinished', function (event, args) {
             console.log(event, args)
             // Editor.assetdb.import([args], 'db://assets/resources');
             Editor.assetdb.refresh(args.db);
+            // const {getCurrentWindow, globalShortcut} = require('electron').remote;
+            // getCurrentWindow().reload();
         });
     }
     `;
-    webcontent.on('did-finish-load', async function () {
-        try {
-            let res = await webcontent.executeJavaScript(jscode, true)
-            trace(res)
-        } catch (e) {
-            trace(e)
-        }
-    })
+    try {
+        let res = await webcontent.executeJavaScript(jscode, true)
+        // trace("[Sprite9Editor] executeJavaScript ret", res)
+    } catch (e) {
+        trace("[Sprite9Editor] error", e)
+    }
+    // webcontent.on('did-finish-load', async function () {
+    //     try {
+    //         let res = await webcontent.executeJavaScript(jscode, true)
+    //         trace("[Sprite9Editor] did-finish-load", res)
+    //     } catch (e) {
+    //         trace("[Sprite9Editor]", e)
+    //     }
+    // })
 
 }
 
 module.exports = {
     load() {
         // execute when package 
-        if (!Editor.Panel.$open) {
-            Editor.Panel.$open = Editor.Panel.open;
-            Editor.Panel.open = function (...args) {
-                Editor.Panel.$open(...args);
-                // trace(args)
-                setTimeout(() => {
-                    for (let webcontent of webContents.getAllWebContents()) {
-                        // Editor.log("*******" + webcontent.id + webcontent.getTitle(), webcontent.getURL());
-                        if (webcontent.getURL().indexOf("sprite-editor") > 0) {
-                            spriteEditHandler(webcontent);
-                        }
-                    }
-                }, 300)
-            }
-        }
+        // if (!Editor.Panel.$open) {
+        //     Editor.Panel.$open = Editor.Panel.open;
+        //     Editor.Panel.open = function (...args) {
+        //         Editor.Panel.$open(...args);
+        //         // trace(...args, args.length)
+        //         setTimeout(() => {
+        //             for (let webcontent of webContents.getAllWebContents()) {
+        //                 // Editor.log("*******" + webcontent.id + webcontent.getTitle(), webcontent.getURL());
+        //                 if (webcontent.getURL().indexOf("sprite-editor") > 0) {
+        //                     spriteEditHandler(webcontent);
+        //                 }
+        //             }
+        //         }, 300)
+        //     }
+        // }
+        trace("Sprite9Editor Plugin loaded");
     },
 
     unload() {
-        if (Editor.Panel.$open) {
-            Editor.Panel.open = Editor.Panel.$open
-            Editor.Panel.$open = null;
-        }
         // execute when package unloaded
     },
 
     // register your ipc messages here
     messages: {
-
+        'did-finish-load'() {
+            trace("did-finish-load");
+        },
+        'editor:panel-open'(...args) {
+            trace("editor:panel-open")
+            setTimeout(() => {
+                for (let webcontent of webContents.getAllWebContents()) {
+                    // Editor.log("*******" + webcontent.id + webcontent.getTitle(), webcontent.getURL());
+                    if (webcontent.getURL().indexOf("sprite-editor") > 0) {
+                        spriteEditHandler(webcontent);
+                    }
+                }
+            }, 300)
+        },
         'sprite9editor:open'() {
             // open entry panel registered in package.json
             Editor.Panel.open('sprite9editor');
@@ -114,20 +154,20 @@ module.exports = {
         'sprite9editor:cropImage'(event, params) {
             // open entry panel registered in package.json
             let fileInfo = JSON.parse(decodeURIComponent(params.url).split("#")[1]);
+            // trace("[Sprite9Editor] panelArgv", fileInfo["panelArgv"]);
             let crops = params.crops;
-            trace("crops", crops);
+            trace("[Sprite9Editor] crops", crops);
             // 找到该图片
             let fileuuid = fileInfo["panelArgv"]['uuid'];
-            ''.substr(0, 2)
             let imgjsonpath = path.join(projectPath, "library", 'imports', fileuuid.substr(0, 2), fileuuid + ".json");
             if (!fse.existsSync(imgjsonpath)) {
-                trace(imgjsonpath + '不存在！');
+                trace('[Sprite9Editor] ' + imgjsonpath + '不存在！');
                 return;
             }
             let jsoninfo = JSON.parse(fse.readFileSync(imgjsonpath, 'utf8'));
             let uuidmtimepath = path.join(projectPath, "library", 'uuid-to-mtime.json');
             if (!fse.existsSync(uuidmtimepath)) {
-                trace(uuidmtimepath + '不存在！');
+                trace('[Sprite9Editor] ' + uuidmtimepath + '不存在！');
                 return;
             }
             let uuidInfo = JSON.parse(fse.readFileSync(uuidmtimepath, 'utf8'));
@@ -141,7 +181,7 @@ module.exports = {
                 Editor.Dialog.messageBox({ type: "info", message: "抱歉，工具暂时只支持PNG格式图片. " })
                 return;
             }
-            trace("处理的图片路径 " + imgPath);
+            trace("[Sprite9Editor] file location: " + imgPath);
             let sizeL = parseInt(crops["inputL"]);
             let sizeR = parseInt(crops["inputR"])
             let sizeT = parseInt(crops["inputT"])
@@ -168,6 +208,7 @@ module.exports = {
                     })
                 )
                 .on("parsed", function () {
+                    trace("[Sprite9Editor] OrignSize:  width = " + this.width + " height = " + this.height);
                     let de_width = sizeL + sizeR;
                     let de_height = sizeT + sizeB;
                     switch (sprite9Type) {
@@ -192,7 +233,7 @@ module.exports = {
                         height: de_height,
                         filterType: 4
                     });
-                    trace("生成9宫格png尺寸 width=" + png.width + "  height" + png.height)
+                    trace("[Sprite9Editor] Regenerate Size width = " + png.width + " height = " + png.height)
                     if (sprite9Type == 0) {
                         for (let y = 0; y < this.height; y++) {
                             for (let x = 0; x < this.width; x++) {
@@ -294,16 +335,32 @@ module.exports = {
                         }
                     }
                     let newPngpath = imgPath.replace(".png", "_9grid.png");
+                    if (crops["override"]) {
+                        newPngpath = imgPath;
+                        trace("[Sprite9Editor] Override origin file ! ")
+                    }
                     let rs = png.pack();
                     let ws = fs.createWriteStream(newPngpath);
                     rs.pipe(ws);
                     ws.on('finish', () => {
                         let filepath = newPngpath.replace(/[\\]+/g, "/");
-                        filepath = path.dirname(filepath);
-                        let ddd = filepath.split("/assets");
-                        let dbpath = 'db://assets/' + ddd[1];
-                        event.sender.send("sprite9editor:imgcropFinished", { img: newPngpath, db: dbpath });
-                        trace('Finished.');
+                        // event.sender.send("sprite9editor:imgcropFinished", { img: newPngpath, db: dbpath });
+                        if (crops["override"]) {
+                            // Editor.Dialog.messageBox({ type: "info", message: "图片已成功切割，下一步请重新打开Sprite Editor并设置新的图片分割线！" })
+                            Editor.Panel.close("sprite-editor", () => {
+                                let ddd = filepath.split("/assets");
+                                let dbpath = 'db://assets/' + ddd[1];
+                                Editor.assetdb.refresh(dbpath, () => {
+                                    Editor.Panel.open("sprite-editor", { uuid: fileuuid })
+                                });
+                            })
+                        } else {
+                            filepath = path.dirname(filepath);
+                            let ddd = filepath.split("/assets");
+                            let dbpath = 'db://assets/' + ddd[1];
+                            Editor.assetdb.refresh(dbpath);
+                        }
+                        trace("[Sprite9Editor] Finished.");
                     });
                 });
         },

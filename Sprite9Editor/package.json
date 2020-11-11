@@ -1,7 +1,7 @@
 {
   "name": "sprite9editor",
-  "version": "0.0.1",
-  "description": "图片9宫格编辑器.",
+  "version": "0.0.2",
+  "description": "图片9宫格切割插件.",
   "author": "eureka2020@foxmail.com",
   "main": "main.js",
   "main-menu": {
