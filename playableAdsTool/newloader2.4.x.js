@@ -30,7 +30,7 @@
         if (res) {
             onComplete && onComplete(null, res);
         } else {
-            onComplete && onComplete(new Error(url + " Not pack!"));
+            onComplete && onComplete(new Error(item.url + " unpack!"));
         }
     }
     [".tsx", ".tmx", ".fnt", ".plist", ".txt", ".atlas", ".json", ".xml", ".ExportJson"].forEach(function (format) {

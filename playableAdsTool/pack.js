@@ -7,9 +7,6 @@ let workdir = process.argv[2];
 if (!workdir) {
     workdir = __dirname;
 }
-workdir = '/Volumes/works/lanwan_projects/jigsawAds/build/web-mobile';
-workdir = '/Volumes/works/lanwan_projects/jigsawAds/web-mobile';
-
 
 // 以下格式转成base64
 const base64FileFormat = new Set(['.png', '.jpg', '.jpeg', '.bmp', '.gif', '.webp', '.mp3', '.wav', '.ogg', '.w4a', 'binary', ".bin", ".dbbin", ".skel"]);
@@ -23,6 +20,7 @@ const timePromise = function (duration) {
 let main = async () => {
     let newloaderJS = '';
     let resdir = '';
+    let needDeletefiles = [];
     if (fs.existsSync(path.join(workdir, "assets"))) {
         resdir = path.join(workdir, "assets");
         newloaderJS = path.join(__dirname, "newloader2.4.x.js");
@@ -51,9 +49,10 @@ let main = async () => {
 
     let ouputAssetUTF8Contents = {};
     let ouputAssetJSFiles = [];
+    let webMobileTag = path.basename(workdir)
     for (let assetsfilepath of files) {
         let _assetsfilepath = assetsfilepath.replace(/[\\]+/g, "/");
-        let filePath = _assetsfilepath.split("web-mobile/").pop();
+        let filePath = _assetsfilepath.split(webMobileTag + "/").pop();
         let extname = path.extname(filePath);
         if (base64FileFormat.has(extname)) {
             let content = fs.readFileSync(assetsfilepath, "base64");
@@ -65,10 +64,13 @@ let main = async () => {
             ouputAssetJSFiles.push(assetsfilepath);
         }
     }
-    fs.writeFileSync(path.join(workdir, "packassets.js"), `window["ccassets"]=${JSON.stringify(ouputAssetUTF8Contents)}`);
+    fs.writeFileSync(path.join(workdir, "packassets.js"),
+        `window["ccassets"]=${JSON.stringify(ouputAssetUTF8Contents)}`);
     let jsfilesQueue = [
         path.join(workdir, "packassets.js")
     ];
+    needDeletefiles.push(path.join(workdir, "packassets.js"));
+
     let cocosjsfiles = [];
     let loopDirJS = function (dir, fileArr) {
         if (dir.indexOf(resdir) >= 0) {
@@ -101,8 +103,24 @@ let main = async () => {
     }
     // 把main.js 放入jsfilesQueue
     for (let index = 0; index < cocosjsfiles.length; index++) {
-        const jsfile = cocosjsfiles[index];
+        let jsfile = cocosjsfiles[index];
         if (jsfile.indexOf('main.') >= 0) {
+            let jscontent = fs.readFileSync(jsfile, 'utf-8');
+            let linearr = jscontent.split("\n");
+            let haschange = false;
+            for (let j = 0; j < linearr.length; j++) {
+                let element = linearr[j];
+                if (element.indexOf("jsList:") >= 0) {
+                    linearr[j] = "jsList:[],";
+                    haschange = true;
+                    break;
+                }
+            }
+            if (haschange) {
+                jsfile = path.join(workdir, 'main_temp.js')
+                fs.writeFileSync(jsfile, linearr.join("\n"), 'utf-8');
+                needDeletefiles.push(jsfile);
+            }
             jsfilesQueue.push(jsfile);
             cocosjsfiles.splice(index, 1);
             break;
@@ -118,6 +136,7 @@ let main = async () => {
         }
     }
     jsfilesQueue.push(newloaderJS)
+    // 剩余的js（也可能没有了）
     jsfilesQueue = jsfilesQueue.concat(cocosjsfiles);
 
     // assetsBundle 内合并js放入 filesQueue;
@@ -134,7 +153,7 @@ let main = async () => {
     console.log("处理 css ")
     let csscode = fs.readFileSync(path.join(__dirname, "style-mobile.css"), 'utf-8');
     csscode = `<style>${new CleanCSS().minify(csscode).styles}</style>`
-    html = html.replace("</head>", `${csscode}\n</head>`);
+    html = html.replace("</head>", `${csscode}</head>`);
     console.log("css 写入完成")
     let jscodecontent = '';
     for (let jsfile of jsfilesQueue) {
@@ -149,11 +168,14 @@ let main = async () => {
     html = html.replace("</body>", `${jscodeTAG}\n</body>`)
     // jscodeTAG = `<script type="text/javascript">window.boot();</script>`
     // html = html.replace("</body>", `${jscodeTAG}\n</body>`)
-
     let ouputhtml = path.join(path.dirname(workdir), "index." + Math.floor(Date.now() / 1000) + ".html");
-    console.log(ouputhtml)
     fs.writeFileSync(ouputhtml, html, 'utf-8')
-
-    console.log(" html写入完成");
+    console.log("html写入完成");
+    for (let fff of needDeletefiles) {
+        fs.unlink(fff, (err) => {
+            console.log(err)
+        })
+    }
+    console.log(ouputhtml)
 }
 main();

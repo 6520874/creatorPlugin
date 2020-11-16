@@ -31,7 +31,7 @@
                 if (res) {
                     onComplete && onComplete(null, res);
                 } else {
-                    onComplete && onComplete(new Error(item.url + " Not pack!"));
+                    onComplete && onComplete(new Error(item.url + " unpack!"));
                 }
             };
         });
