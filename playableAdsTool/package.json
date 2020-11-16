@@ -1,0 +1,11 @@
+{
+    "name": "game-template2",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "dependencies": {
+        "uglify-js": "^3.11.6",
+        "clean-css": "^4.2.3"
+    },
+    "license": "ISC"
+}
