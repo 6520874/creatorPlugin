@@ -1,9 +1,21 @@
+/*
+ * @CreateTime: Nov 16, 2020 8:31 PM 
+ * @Author: howe 
+ * @Contact: ihowe@outlook.com 
+ * @Last Modified By: howe 
+ * @Last Modified Time: Nov 16, 2020 8:31 PM 
+ * @Description: 
+ * cocos creator生成的 web-mobile项目打包合并成一个独立的html文件
+ */
 
 const path = require("path");
 const fs = require('fs');
 const CleanCSS = require("clean-css");
+
 console.log(process.argv);
+let packJSPath = process.argv[1];
 let workdir = process.argv[2];
+workdir = '/Volumes/works/lanwan_projects/jigsawAds/web-mobile'
 if (!workdir) {
     console.error("必须有路径参数！");
     return;
@@ -22,12 +34,14 @@ let main = async () => {
     let newloaderJS = '';
     let resdir = '';
     let needDeletefiles = [];
+    let packRoot = path.dirname(packJSPath);
+    console.log("packRoot = ", packRoot)
     if (fs.existsSync(path.join(workdir, "assets"))) {
         resdir = path.join(workdir, "assets");
-        newloaderJS = path.join(__dirname, "newloader2.4.x.js");
+        newloaderJS = path.join(packRoot, "newloader2.4.x.js");
     } else {
         resdir = path.join(workdir, "res");
-        newloaderJS = path.join(__dirname, "newloader2.3.x.js");
+        newloaderJS = path.join(packRoot, "newloader2.3.x.js");
     }
     if (!fs.existsSync(resdir)) {
         console.error(resdir + " 不存在！");
@@ -152,7 +166,7 @@ let main = async () => {
     html = html.replace(/<script.*<\/script>/gs, "")
 
     console.log("处理 css ")
-    let csscode = fs.readFileSync(path.join(__dirname, "style-mobile.css"), 'utf-8');
+    let csscode = fs.readFileSync(path.join(packRoot, "style-mobile.css"), 'utf-8');
     csscode = `<style>${new CleanCSS().minify(csscode).styles}</style>`
     html = html.replace("</head>", `${csscode}</head>`);
     console.log("css 写入完成")
