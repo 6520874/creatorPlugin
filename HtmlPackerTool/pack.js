@@ -167,14 +167,12 @@ let main = async () => {
     }
     let jscodeTAG = `<script type="text/javascript">\n${jscodecontent}window.boot();</script>`
     html = html.replace("</body>", `${jscodeTAG}\n</body>`)
-    // jscodeTAG = `<script type="text/javascript">window.boot();</script>`
-    // html = html.replace("</body>", `${jscodeTAG}\n</body>`)
     let ouputhtml = path.join(path.dirname(workdir), "index." + Math.floor(Date.now() / 1000) + ".html");
     fs.writeFileSync(ouputhtml, html, 'utf-8')
     console.log("html写入完成");
     for (let fff of needDeletefiles) {
         fs.unlink(fff, (err) => {
-            console.log(err)
+            err && console.log(err)
         })
     }
     console.log(ouputhtml)
