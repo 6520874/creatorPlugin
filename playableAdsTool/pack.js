@@ -2,10 +2,11 @@
 const path = require("path");
 const fs = require('fs');
 const CleanCSS = require("clean-css");
-
+console.log(process.argv);
 let workdir = process.argv[2];
 if (!workdir) {
-    workdir = __dirname;
+    console.error("必须有路径参数！");
+    return;
 }
 
 // 以下格式转成base64
