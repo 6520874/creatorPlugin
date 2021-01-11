@@ -15,7 +15,6 @@ const CleanCSS = require("clean-css");
 console.log(process.argv);
 let packJSPath = process.argv[1];
 let workdir = process.argv[2];
-workdir = '/Volumes/works/lanwan_projects/jigsawAds/web-mobile'
 if (!workdir) {
     console.error("必须有路径参数！");
     return;
